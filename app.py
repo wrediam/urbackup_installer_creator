@@ -86,9 +86,6 @@ def create_installer():
         shutil.rmtree(workdir)
         return response
 
-    with open(workdir+"/src/urbackup-installer/main.go", "wt") as f:
-        f.write(installer_go)
-
     go_os = "windows"
     go_arch = "386"
     go_arm = "6"
@@ -123,6 +120,9 @@ def create_installer():
         os.makedirs(workdir+"/src/github.com/cheggaaa/pb/v3/termutil", exist_ok=True)
         os.makedirs(workdir+"/src/golang.org/x/crypto/pbkdf2", exist_ok=True)
         os.makedirs(workdir+"/src/urbackup-installer", exist_ok=True)
+        
+        with open(workdir+"/src/urbackup-installer/main.go", "wt") as f:
+            f.write(installer_go)
         
         # Create a minimal pb/v3 package
         with open(workdir+"/src/github.com/cheggaaa/pb/v3/pb.go", "w") as f:
