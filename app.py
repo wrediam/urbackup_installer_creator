@@ -130,7 +130,6 @@ def create_installer():
             f.write("package pb\n\n")
             f.write("import (\n")
             f.write("\t\"io\"\n")
-            f.write("\t\"time\"\n")
             f.write(")\n\n")
             f.write("// Version of ProgressBar library\n")
             f.write("const Version = \"3.0.8\"\n\n")
@@ -244,13 +243,8 @@ def create_installer():
             f.write("\treturn make([]byte, keyLen)\n")
             f.write("}\n")
         
-        # Move main.go to the correct location for GOPATH mode
-        os.makedirs(workdir+"/src/urbackup-installer", exist_ok=True)
-        with open(workdir+"/main.go", "r") as src_file:
-            main_content = src_file.read()
-        
-        with open(workdir+"/src/urbackup-installer/main.go", "w") as dst_file:
-            dst_file.write(main_content)
+        # We've already created the urbackup-installer directory and written main.go to it
+        # No need to move it again
         
         # Update the output path
         out_path = os.path.join(workdir, "bin", out_name)
