@@ -4,42 +4,21 @@ FROM debian:stable
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update and install packages in separate steps
-RUN apt-get -y update && \
-    apt-get -y --no-install-recommends install \
-    python3 \
-    python3-pip \
-    python3-venv \
-    sudo \
-    git \
-    wget \
-    python3-setuptools \
-    ca-certificates && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# Install Python packages with --break-system-packages flag
-RUN pip3 install --break-system-packages virtualenvwrapper
-
-# Download and install Go
-RUN wget "https://go.dev/dl/go1.20.5.linux-amd64.tar.gz" -O "/tmp/go-linux-amd64.tar.gz" && \
-    tar -C /usr/local -xf "/tmp/go-linux-amd64.tar.gz" && \
-    rm "/tmp/go-linux-amd64.tar.gz"
+RUN apt-get -y update &&\
+     apt-get -y --no-install-recommends install python3 python3-pip sudo git upx wget python3-setuptools &&\
+     pip3 install virtualenvwrapper &&\
+     wget "https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz" -O "/tmp/go-linux-amd64.tar.gz" &&\
+     tar -C /usr/local -xf "/tmp/go-linux-amd64.tar.gz" &&\
+     rm "/tmp/go-linux-amd64.tar.gz"
 
 RUN useradd -ms /bin/bash app &&\
     echo "export WORKON_HOME=$HOME/.virtualenvs" >> /home/app/.bashrc &&\
     mkdir -p /home/app/.virtualenvs &&\
     echo "source /usr/local/bin/virtualenvwrapper_lazy.sh" >> /home/app/.bashrc &&\
     chown -R app:app /home/app &&\
-    mkdir /var/log/app && chown app:app /var/log/app
-
-# Set up Go module and install Go packages
-RUN mkdir -p /home/app/gomod && \
-    chown -R app:app /home/app && \
-    echo 'export PATH=$PATH:/usr/local/go/bin:/home/app/go/bin' >> /home/app/.bashrc && \
-    sudo -u app bash -c 'cd /home/app/gomod && /usr/local/go/bin/go mod init urbackup_installer' && \
-    sudo -u app bash -c '/usr/local/go/bin/go get github.com/cheggaaa/pb/v3@latest' && \
-    sudo -u app bash -c '/usr/local/go/bin/go get golang.org/x/crypto/pbkdf2@latest'
+    mkdir /var/log/app && chown app:app /var/log/app &&\
+    sudo -u app /usr/local/go/bin/go get "github.com/cheggaaa/pb/v3" &&\
+    sudo -u app /usr/local/go/bin/go get "golang.org/x/crypto/pbkdf2"
     
 
 COPY --chown=app:app requirements.txt /home/app/
