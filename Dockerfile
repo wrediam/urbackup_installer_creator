@@ -4,12 +4,27 @@ FROM debian:stable
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get -y update &&\
-     apt-get -y --no-install-recommends install python3 python3-pip sudo git upx wget python3-setuptools &&\
-     pip3 install virtualenvwrapper &&\
-     wget "https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz" -O "/tmp/go-linux-amd64.tar.gz" &&\
-     tar -C /usr/local -xf "/tmp/go-linux-amd64.tar.gz" &&\
-     rm "/tmp/go-linux-amd64.tar.gz"
+# Update and install packages in separate steps
+RUN apt-get -y update && \
+    apt-get -y --no-install-recommends install \
+    python3 \
+    python3-pip \
+    sudo \
+    git \
+    upx \
+    wget \
+    python3-setuptools \
+    ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Python packages
+RUN pip3 install virtualenvwrapper
+
+# Download and install Go
+RUN wget "https://go.dev/dl/go1.20.5.linux-amd64.tar.gz" -O "/tmp/go-linux-amd64.tar.gz" && \
+    tar -C /usr/local -xf "/tmp/go-linux-amd64.tar.gz" && \
+    rm "/tmp/go-linux-amd64.tar.gz"
 
 RUN useradd -ms /bin/bash app &&\
     echo "export WORKON_HOME=$HOME/.virtualenvs" >> /home/app/.bashrc &&\
