@@ -1,15 +1,20 @@
 #SPDX-License-Identifier: AGPL-3.0-or-later
 
-FROM debian:buster
+FROM debian:stable
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get -y update &&\
-     apt-get -y --no-install-recommends install python3 python3-pip sudo git upx wget python3-setuptools &&\
-     pip3 install virtualenvwrapper &&\
-     wget "https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz" -O "/tmp/go-linux-amd64.tar.gz" &&\
-     tar -C /usr/local -xf "/tmp/go-linux-amd64.tar.gz" &&\
-     rm "/tmp/go-linux-amd64.tar.gz"
+RUN apt-get -y update && \
+    apt-get -y install apt-transport-https && \
+    echo 'deb http://deb.debian.org/debian stable main contrib non-free' > /etc/apt/sources.list && \
+    echo 'deb http://security.debian.org/debian-security stable-security main contrib non-free' >> /etc/apt/sources.list && \
+    apt-get -y update && \
+    apt-get -y --no-install-recommends install python3 python3-pip sudo git wget python3-setuptools && \
+    apt-get -y --no-install-recommends install upx-ucl || apt-get -y --no-install-recommends install upx && \
+    pip3 install virtualenvwrapper && \
+    wget "https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz" -O "/tmp/go-linux-amd64.tar.gz" && \
+    tar -C /usr/local -xf "/tmp/go-linux-amd64.tar.gz" && \
+    rm "/tmp/go-linux-amd64.tar.gz"
 
 RUN useradd -ms /bin/bash app &&\
     echo "export WORKON_HOME=$HOME/.virtualenvs" >> /home/app/.bashrc &&\
@@ -17,8 +22,8 @@ RUN useradd -ms /bin/bash app &&\
     echo "source /usr/local/bin/virtualenvwrapper_lazy.sh" >> /home/app/.bashrc &&\
     chown -R app:app /home/app &&\
     mkdir /var/log/app && chown app:app /var/log/app &&\
-    sudo -u app /usr/local/go/bin/go get "github.com/cheggaaa/pb/v3" &&\
-    sudo -u app /usr/local/go/bin/go get "golang.org/x/crypto/pbkdf2"
+    sudo -u app bash -c "export GO111MODULE=on && /usr/local/go/bin/go get -d github.com/cheggaaa/pb/v3" &&\
+    sudo -u app bash -c "export GO111MODULE=on && /usr/local/go/bin/go get -d golang.org/x/crypto/pbkdf2"
     
 
 COPY --chown=app:app requirements.txt /home/app/

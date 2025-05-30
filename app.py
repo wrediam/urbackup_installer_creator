@@ -126,7 +126,11 @@ def create_installer():
         app.logger.error('error>' + e.output.decode()+  '<')
         raise
 	
-    output = subprocess.check_output(["upx", os.path.join(workdir, out_name)], stderr=subprocess.STDOUT)
+    try:
+        output = subprocess.check_output(["upx", os.path.join(workdir, out_name)], stderr=subprocess.STDOUT)
+    except FileNotFoundError:
+        # Try with upx-ucl if upx is not found
+        output = subprocess.check_output(["upx-ucl", os.path.join(workdir, out_name)], stderr=subprocess.STDOUT)
 
     outf = BytesIO()
     with open(os.path.join(workdir, out_name), "rb") as f:
