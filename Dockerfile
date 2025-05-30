@@ -11,10 +11,19 @@ RUN apt-get -y update && \
     python3-pip \
     sudo \
     git \
-    upx \
     wget \
     python3-setuptools \
     ca-certificates && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install upx from non-free repository
+RUN apt-get -y update && \
+    apt-get -y install apt-transport-https && \
+    echo "deb http://deb.debian.org/debian stable main contrib non-free" > /etc/apt/sources.list.d/non-free.list && \
+    apt-get -y update && \
+    apt-get -y --no-install-recommends install upx-ucl && \
+    ln -s /usr/bin/upx-ucl /usr/bin/upx && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
