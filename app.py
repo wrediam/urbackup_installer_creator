@@ -126,6 +126,8 @@ def create_installer():
         with open(workdir+"/src/github.com/cheggaaa/pb/v3/pb.go", "w") as f:
             f.write("// Package pb provides progress bar functionality\n")
             f.write("package pb\n\n")
+            f.write("// Full is a constant for the full template\n")
+            f.write("const Full = 1\n\n")
             f.write("// New creates a new progress bar\n")
             f.write("func New(count int) *ProgressBar {\n")
             f.write("\treturn &ProgressBar{}\n")
