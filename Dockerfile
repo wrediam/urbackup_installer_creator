@@ -9,6 +9,7 @@ RUN apt-get -y update && \
     apt-get -y --no-install-recommends install \
     python3 \
     python3-pip \
+    python3-venv \
     sudo \
     git \
     wget \
@@ -17,8 +18,8 @@ RUN apt-get -y update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Python packages
-RUN pip3 install virtualenvwrapper
+# Install Python packages with --break-system-packages flag
+RUN pip3 install --break-system-packages virtualenvwrapper
 
 # Download and install Go
 RUN wget "https://go.dev/dl/go1.20.5.linux-amd64.tar.gz" -O "/tmp/go-linux-amd64.tar.gz" && \
