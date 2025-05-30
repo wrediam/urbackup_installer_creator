@@ -269,15 +269,42 @@ def create_installer():
         raise
 	
     final_path = os.path.join(workdir, "bin", out_name)
-    try:
+    
+    # Check if the executable file exists
+    if not os.path.exists(final_path):
+        app.logger.error(f"Executable file not found at {final_path}")
+        # List files in the bin directory to help debug
+        bin_dir = os.path.join(workdir, "bin")
+        if os.path.exists(bin_dir):
+            app.logger.info(f"Files in {bin_dir}: {os.listdir(bin_dir)}")
+        else:
+            app.logger.error(f"Bin directory {bin_dir} does not exist")
+            
+        # Try to find the executable elsewhere
+        for root, dirs, files in os.walk(workdir):
+            for file in files:
+                if file.endswith(".exe") or file == "UrBackupClientInstaller":
+                    app.logger.info(f"Found potential executable at: {os.path.join(root, file)}")
+                    final_path = os.path.join(root, file)
+                    break
+            if os.path.exists(final_path):
+                break
+    
+    # Only try to compress if the file exists
+    if os.path.exists(final_path):
         try:
-            output = subprocess.check_output(["upx", final_path], stderr=subprocess.STDOUT)
-        except FileNotFoundError:
-            # Try with upx-ucl if upx is not found
-            output = subprocess.check_output(["upx-ucl", final_path], stderr=subprocess.STDOUT)
-    except subprocess.CalledProcessError as e:
-        app.logger.warning(f"UPX compression failed: {e}. Continuing with uncompressed executable.")
-        # Continue without compression if UPX fails
+            try:
+                output = subprocess.check_output(["upx", final_path], stderr=subprocess.STDOUT)
+            except FileNotFoundError:
+                # Try with upx-ucl if upx is not found
+                output = subprocess.check_output(["upx-ucl", final_path], stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            app.logger.warning(f"UPX compression failed: {e}. Continuing with uncompressed executable.")
+            # Continue without compression if UPX fails
+    else:
+        app.logger.error(f"Cannot compress non-existent file: {final_path}")
+        # Create a simple error response
+        return "Error: Failed to build installer. Check server logs for details.", 500
 
     outf = BytesIO()
     with open(final_path, "rb") as f:
