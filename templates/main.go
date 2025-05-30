@@ -86,25 +86,34 @@ type SaltResp struct {
 
 func get_salt(server_settings ServerSettings, username string) (sr *SaltResp, err error) {
 	fmt.Println("Getting login information from server...")
+	fmt.Println("Server URL:", server_settings.Url)
+	fmt.Println("Username:", username)
 
 	json_str, err := get_json(server_settings, "salt", url.Values{"username": {username}})
 
 	if err != nil {
+		fmt.Println("Error connecting to server:", err)
 		return nil, err
 	}
 
+	fmt.Println("Server response:", json_str)
+
 	err = json.Unmarshal([]byte(json_str), &sr)
 	if err != nil {
+		fmt.Println("Error parsing server response:", err)
 		return nil, err
 	}
 
 	if sr.Error != 0 || len(sr.Salt) == 0 {
 		if sr.Error==0 {
+			fmt.Println("User not found on server. Check if username is correct.")
 			return nil, errors.New("User not found on server") 
 		}
+		fmt.Println("Error getting salt. Server error code:", sr.Error)
 		return nil, errors.New("Error getting salt")
 	}
 
+	fmt.Println("Successfully retrieved salt from server")
 	return sr, nil
 }
 
@@ -116,11 +125,13 @@ type LoginResp struct {
 func login(server_settings ServerSettings, username string, sr *SaltResp, password string) error {
 
 	fmt.Println("Logging into server...")
+	fmt.Println("Session ID:", sr.Ses)
 
 	password_md5_bin := md5.Sum([]byte(sr.Salt + password))
 	password_md5 := hex.EncodeToString(password_md5_bin[:])
 
 	if sr.Pbkdf2_rounds > 0 {
+		fmt.Println("Using PBKDF2 with", sr.Pbkdf2_rounds, "rounds")
 		password_md5 = hex.EncodeToString(pbkdf2.Key(password_md5_bin[:],
 			[]byte(sr.Salt), sr.Pbkdf2_rounds, 32, sha256.New))
 	}
@@ -128,24 +139,31 @@ func login(server_settings ServerSettings, username string, sr *SaltResp, passwo
 	password_md5_bin = md5.Sum([]byte(sr.Rnd + password_md5))
 	password_md5 = hex.EncodeToString(password_md5_bin[:])
 
+	fmt.Println("Sending login request to server...")
 	json_str, err := get_json(server_settings, "login", url.Values{"username": {username},
 		"password": {password_md5},
 		"ses":      {sr.Ses}})
 
 	if err != nil {
+		fmt.Println("Error sending login request:", err)
 		return err
 	}
+
+	fmt.Println("Login response:", json_str)
 
 	var lr LoginResp
 	err = json.Unmarshal([]byte(json_str), &lr)
 	if err != nil {
+		fmt.Println("Error parsing login response:", err)
 		return err
 	}
 
 	if lr.Error != 0 || !lr.Success {
-		return errors.New("Error logging in")
+		fmt.Println("Login failed. Error code:", lr.Error, "Success:", lr.Success)
+		return errors.New("Error logging in. Check username and password.")
 	}
 
+	fmt.Println("Login successful!")
 	return nil
 }
 
@@ -314,6 +332,17 @@ func do_download() error {
 	if "{{ linux }}" == "1" {
 		linux = true
 	}
+	
+	fmt.Println("Configuration:")
+	fmt.Println("- Server URL:", server_url)
+	fmt.Println("- Username:", server_username)
+	fmt.Println("- Password length:", len(server_password), "characters")
+	fmt.Println("- Client prefix:", clientname_prefix)
+	fmt.Println("- Group name:", group_name)
+	fmt.Println("- Append random:", append_rnd)
+	fmt.Println("- No tray:", no_tray)
+	fmt.Println("- Silent install:", silent)
+	fmt.Println("- Linux:", linux)
 
 	var server_settings ServerSettings
 	server_settings.Url = server_url
@@ -452,6 +481,9 @@ func main() {
 		retry = true
 	}
 
+	fmt.Println("=== UrBackup Client Installer ===")
+	fmt.Println("Starting installation process...")
+
 	var do_retry = true
 	for do_retry {
 		do_retry = false
@@ -459,12 +491,21 @@ func main() {
 		err := do_download()
 
 		if err != nil {
+			fmt.Println("\nERROR: Installation failed with the following error:")
+			fmt.Println("-------------------------------------------")
 			fmt.Println(err)
+			fmt.Println("-------------------------------------------")
+			fmt.Println("Please check the error message and verify:")
+			fmt.Println("1. The server URL is correct and accessible")
+			fmt.Println("2. The username and password are correct")
+			fmt.Println("3. The user has permission to add clients")
 
 			if !retry {
 				fmt.Print("Press 'Enter' to continue...")
 				bufio.NewReader(os.Stdin).ReadBytes('\n')
 			}
+		} else {
+			fmt.Println("\nInstallation completed successfully!")
 		}
 
 		if retry {
