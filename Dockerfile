@@ -31,9 +31,16 @@ RUN useradd -ms /bin/bash app &&\
     mkdir -p /home/app/.virtualenvs &&\
     echo "source /usr/local/bin/virtualenvwrapper_lazy.sh" >> /home/app/.bashrc &&\
     chown -R app:app /home/app &&\
-    mkdir /var/log/app && chown app:app /var/log/app &&\
-    sudo -u app /usr/local/go/bin/go get "github.com/cheggaaa/pb/v3" &&\
-    sudo -u app /usr/local/go/bin/go get "golang.org/x/crypto/pbkdf2"
+    mkdir /var/log/app && chown app:app /var/log/app
+
+# Set up Go module and install Go packages
+RUN mkdir -p /home/app/gomod && \
+    cd /home/app/gomod && \
+    sudo -u app /usr/local/go/bin/go mod init urbackup_installer && \
+    sudo -u app /usr/local/go/bin/go install github.com/cheggaaa/pb/v3@latest && \
+    sudo -u app /usr/local/go/bin/go install golang.org/x/crypto/pbkdf2@latest && \
+    echo 'export PATH=$PATH:/usr/local/go/bin:/home/app/go/bin' >> /home/app/.bashrc && \
+    chown -R app:app /home/app
     
 
 COPY --chown=app:app requirements.txt /home/app/
