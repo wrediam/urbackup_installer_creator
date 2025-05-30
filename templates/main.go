@@ -140,11 +140,23 @@ func login(server_settings ServerSettings, username string, sr *SaltResp, passwo
 	// Step 2: PBKDF2 if rounds > 0
 	if sr.Pbkdf2_rounds > 0 {
 		fmt.Println("Using PBKDF2 with", sr.Pbkdf2_rounds, "rounds")
-		// Fix: Use the password directly as the password parameter, not the MD5 hash
-		// The salt should be used as-is from the server
-		key := pbkdf2.Key([]byte(password), []byte(sr.Salt), sr.Pbkdf2_rounds, 32, sha256.New)
-		password_md5 = hex.EncodeToString(key)
-		fmt.Println("Step 2 - After PBKDF2:", password_md5)
+		
+		// Try different approaches for PBKDF2
+		// Approach 1: Use the MD5 hash as the password parameter (original approach)
+		key1 := pbkdf2.Key(password_md5_bin[:], []byte(sr.Salt), sr.Pbkdf2_rounds, 32, sha256.New)
+		fmt.Println("PBKDF2 Approach 1 (MD5 hash as password):", hex.EncodeToString(key1))
+		
+		// Approach 2: Use the raw password
+		key2 := pbkdf2.Key([]byte(password), []byte(sr.Salt), sr.Pbkdf2_rounds, 32, sha256.New)
+		fmt.Println("PBKDF2 Approach 2 (raw password):", hex.EncodeToString(key2))
+		
+		// Approach 3: Use the hex string of the MD5 hash
+		key3 := pbkdf2.Key([]byte(password_md5), []byte(sr.Salt), sr.Pbkdf2_rounds, 32, sha256.New)
+		fmt.Println("PBKDF2 Approach 3 (hex string of MD5):", hex.EncodeToString(key3))
+		
+		// Use Approach 1 for now (can be changed based on results)
+		password_md5 = hex.EncodeToString(key1)
+		fmt.Println("Step 2 - After PBKDF2 (using Approach 1):", password_md5)
 	}
 
 	// Step 3: Final MD5 hash with random value
