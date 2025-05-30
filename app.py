@@ -255,8 +255,13 @@ def create_installer():
 
     try:
         app.logger.info("run-start")
-        # Use GOPATH-style build command
-        build_cmd = ["go", "build", "-o", os.path.join(workdir, "bin", out_name)]
+        # Ensure bin directory exists
+        bin_dir = os.path.join(workdir, "bin")
+        os.makedirs(bin_dir, exist_ok=True)
+        
+        # Use GOPATH-style build command with absolute path
+        output_path = os.path.abspath(os.path.join(bin_dir, out_name))
+        build_cmd = ["go", "build", "-o", output_path]
         if go_ldflags:
             build_cmd.extend(go_ldflags.split())
         build_cmd.append("urbackup-installer")
@@ -312,4 +317,5 @@ def create_installer():
 
     outf.seek(0)
 
-    return flask.send_file(outf, as_attachment=True, attachment_filename=out_name)
+    # In newer Flask versions, attachment_filename is replaced with download_name
+    return flask.send_file(outf, as_attachment=True, download_name=out_name)
