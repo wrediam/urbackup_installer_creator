@@ -88,6 +88,21 @@ def create_installer():
 
     with open(workdir+"/main.go", "wt") as f:
         f.write(installer_go)
+        
+    # Initialize Go module
+    try:
+        init_cmd = ["go", "mod", "init", "urbackup-installer"]
+        subprocess.check_output(init_cmd, stderr=subprocess.STDOUT, cwd=workdir, env=env)
+        
+        # Create go.mod with required dependencies
+        with open(workdir+"/go.mod", "a") as f:
+            f.write("\nrequire (\n")
+            f.write("\tgithub.com/cheggaaa/pb/v3 v3.1.7\n")
+            f.write("\tgolang.org/x/crypto v0.38.0\n")
+            f.write(")\n")
+    except subprocess.CalledProcessError as e:
+        app.logger.error("Error initializing Go module: " + e.output.decode())
+        # Continue anyway, as this might not be fatal
 
     go_os = "windows"
     go_arch = "386"
@@ -114,12 +129,15 @@ def create_installer():
     elif sel_os == "win32":
         go_ldflags = ""
 
-    env = {"GOARCH": go_arch, "GOOS": go_os, "GOARM": go_arm, "PATH": os.getenv("PATH"), "HOME": os.getenv("HOME")}
+    env = {"GOARCH": go_arch, "GOOS": go_os, "GOARM": go_arm, "PATH": os.getenv("PATH"), "HOME": os.getenv("HOME"), "GO111MODULE": "on"}
 
     try:
         app.logger.info("run-start")
-        output = subprocess.check_output(["go",
-            "build", "-o", out_name, go_ldflags], stderr=subprocess.STDOUT, cwd=workdir, env=env)
+        build_cmd = ["go", "build", "-o", out_name]
+        if go_ldflags:
+            build_cmd.extend(go_ldflags.split())
+        app.logger.info("Running command: " + " ".join(build_cmd))
+        output = subprocess.check_output(build_cmd, stderr=subprocess.STDOUT, cwd=workdir, env=env)
     except subprocess.CalledProcessError as e:
         app.logger.error("err")
         app.logger.error(e)
