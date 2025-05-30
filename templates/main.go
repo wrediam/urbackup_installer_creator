@@ -140,8 +140,10 @@ func login(server_settings ServerSettings, username string, sr *SaltResp, passwo
 	// Step 2: PBKDF2 if rounds > 0
 	if sr.Pbkdf2_rounds > 0 {
 		fmt.Println("Using PBKDF2 with", sr.Pbkdf2_rounds, "rounds")
-		password_md5 = hex.EncodeToString(pbkdf2.Key(password_md5_bin[:],
-			[]byte(sr.Salt), sr.Pbkdf2_rounds, 32, sha256.New))
+		// Fix: Use the password directly as the password parameter, not the MD5 hash
+		// The salt should be used as-is from the server
+		key := pbkdf2.Key([]byte(password), []byte(sr.Salt), sr.Pbkdf2_rounds, 32, sha256.New)
+		password_md5 = hex.EncodeToString(key)
 		fmt.Println("Step 2 - After PBKDF2:", password_md5)
 	}
 
