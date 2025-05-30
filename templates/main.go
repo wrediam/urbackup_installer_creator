@@ -47,7 +47,8 @@ func get_response(server_settings ServerSettings, action string, params url.Valu
 		return nil, err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	// Set the correct Content-Type for form data
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err = http.DefaultClient.Do(req)
 	if err != nil {
@@ -142,7 +143,10 @@ func login(server_settings ServerSettings, username string, sr *SaltResp, passwo
 	fmt.Println("Sending login request to server...")
 	json_str, err := get_json(server_settings, "login", url.Values{"username": {username},
 		"password": {password_md5},
-		"ses":      {sr.Ses}})
+		"ses":      {sr.Ses},
+		"lang":     {"en"}})
+	
+	fmt.Println("Login parameters: username=", username, "&password=", password_md5, "&ses=", sr.Ses, "&lang=en")
 
 	if err != nil {
 		fmt.Println("Error sending login request:", err)
