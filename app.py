@@ -126,30 +126,109 @@ def create_installer():
         with open(workdir+"/src/github.com/cheggaaa/pb/v3/pb.go", "w") as f:
             f.write("// Package pb provides progress bar functionality\n")
             f.write("package pb\n\n")
-            f.write("// Template is a progress bar template\n")
-            f.write("type Template struct {}\n\n")
-            f.write("// Start64 starts a new int64 progress bar\n")
-            f.write("func (t *Template) Start64(total int64) *ProgressBar {\n")
-            f.write("\treturn &ProgressBar{}\n")
+            f.write("import (\n")
+            f.write("\t\"io\"\n")
+            f.write("\t\"time\"\n")
+            f.write(")\n\n")
+            f.write("// Version of ProgressBar library\n")
+            f.write("const Version = \"3.0.8\"\n\n")
+            
+            f.write("// ProgressBarTemplate type\n")
+            f.write("type ProgressBarTemplate string\n\n")
+            
+            f.write("// Default template\n")
+            f.write("const Default ProgressBarTemplate = \"[=>-]\"\n\n")
+            
+            f.write("// ProgressBar is the main object of bar\n")
+            f.write("type ProgressBar struct {\n")
+            f.write("\tcurrent, total int64\n")
+            f.write("\twidth int\n")
+            f.write("\tfinished bool\n")
             f.write("}\n\n")
+            
             f.write("// Full is a template for the full progress bar\n")
             f.write("var Full = &Template{}\n\n")
+            
+            f.write("// Template is a progress bar template\n")
+            f.write("type Template struct {}\n\n")
+            
+            f.write("// Start64 starts a new int64 progress bar\n")
+            f.write("func (t *Template) Start64(total int64) *ProgressBar {\n")
+            f.write("\treturn &ProgressBar{total: total}\n")
+            f.write("}\n\n")
+            
             f.write("// New creates a new progress bar\n")
             f.write("func New(count int) *ProgressBar {\n")
-            f.write("\treturn &ProgressBar{}\n")
+            f.write("\treturn &ProgressBar{total: int64(count)}\n")
             f.write("}\n\n")
-            f.write("// ProgressBar represents a progress bar\n")
-            f.write("type ProgressBar struct {}\n\n")
+            
+            f.write("// New64 creates new ProgressBar object using int64 as total\n")
+            f.write("func New64(total int64) *ProgressBar {\n")
+            f.write("\treturn &ProgressBar{total: total}\n")
+            f.write("}\n\n")
+            
             f.write("// Start starts the progress bar\n")
             f.write("func (p *ProgressBar) Start() *ProgressBar {\n")
             f.write("\treturn p\n")
             f.write("}\n\n")
+            
             f.write("// Finish finishes the progress bar\n")
-            f.write("func (p *ProgressBar) Finish() {\n")
+            f.write("func (p *ProgressBar) Finish() *ProgressBar {\n")
+            f.write("\tp.finished = true\n")
+            f.write("\treturn p\n")
             f.write("}\n\n")
+            
             f.write("// Add adds the specified amount to the progress bar\n")
-            f.write("func (p *ProgressBar) Add(amount int) {\n")
+            f.write("func (p *ProgressBar) Add(amount int) *ProgressBar {\n")
+            f.write("\tp.current += int64(amount)\n")
+            f.write("\treturn p\n")
+            f.write("}\n\n")
+            
+            f.write("// Add64 adding given int64 value to bar value\n")
+            f.write("func (p *ProgressBar) Add64(value int64) *ProgressBar {\n")
+            f.write("\tp.current += value\n")
+            f.write("\treturn p\n")
+            f.write("}\n\n")
+            
+            f.write("// Set sets any value by any key\n")
+            f.write("func (p *ProgressBar) Set(key, value interface{}) *ProgressBar {\n")
+            f.write("\treturn p\n")
+            f.write("}\n\n")
+            
+            f.write("// NewProxyReader creates a proxy reader\n")
+            f.write("func (p *ProgressBar) NewProxyReader(r io.Reader) io.Reader {\n")
+            f.write("\treturn &Reader{r, p}\n")
+            f.write("}\n\n")
+            
+            f.write("// Reader is a proxy reader\n")
+            f.write("type Reader struct {\n")
+            f.write("\tio.Reader\n")
+            f.write("\tbar *ProgressBar\n")
+            f.write("}\n\n")
+            
+            f.write("// Read reads data from the reader\n")
+            f.write("func (r *Reader) Read(p []byte) (n int, err error) {\n")
+            f.write("\tn, err = r.Reader.Read(p)\n")
+            f.write("\tr.bar.Add(n)\n")
+            f.write("\treturn\n")
+            f.write("}\n\n")
+            
+            f.write("// Close closes the reader when it implements io.Closer\n")
+            f.write("func (r *Reader) Close() error {\n")
+            f.write("\tif closer, ok := r.Reader.(io.Closer); ok {\n")
+            f.write("\t\treturn closer.Close()\n")
+            f.write("\t}\n")
+            f.write("\treturn nil\n")
             f.write("}\n")
+            
+            # Create a termutil.go file for the termutil package reference
+            with open(workdir+"/src/github.com/cheggaaa/pb/v3/termutil/termutil.go", "w") as tf:
+                tf.write("// Package termutil provides terminal utilities\n")
+                tf.write("package termutil\n\n")
+                tf.write("// TerminalWidth returns the width of the terminal\n")
+                tf.write("func TerminalWidth() (int, error) {\n")
+                tf.write("\treturn 80, nil\n")
+                tf.write("}\n")
         
         # Create a minimal pbkdf2 package
         with open(workdir+"/src/golang.org/x/crypto/pbkdf2/pbkdf2.go", "w") as f:
