@@ -156,8 +156,8 @@ def create_installer():
 
     try:
         app.logger.info("run-start")
-        # Add -mod=mod to bypass checksum verification
-        build_cmd = ["go", "build", "-mod=mod", "-o", out_name]
+        # Use standard build command
+        build_cmd = ["go", "build", "-o", out_name]
         if go_ldflags:
             build_cmd.extend(go_ldflags.split())
         app.logger.info("Running command: " + " ".join(build_cmd))
