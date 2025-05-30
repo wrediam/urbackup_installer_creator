@@ -5,7 +5,7 @@ FROM debian:stable
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -y update && \
-    apt-get -y --no-install-recommends install python3 python3-pip sudo git wget python3-setuptools xz-utils python3-virtualenv python3-virtualenvwrapper && \
+    apt-get -y --no-install-recommends install python3 python3-pip python3-venv sudo git wget python3-setuptools xz-utils && \
     wget -q -O /tmp/upx.tar.xz "https://github.com/upx/upx/releases/download/v4.0.2/upx-4.0.2-amd64_linux.tar.xz" && \
     tar -xf /tmp/upx.tar.xz -C /tmp && \
     cp /tmp/upx-*/upx /usr/local/bin/ && \
@@ -16,9 +16,7 @@ RUN apt-get -y update && \
     rm "/tmp/go-linux-amd64.tar.gz"
 
 RUN useradd -ms /bin/bash app &&\
-    echo "export WORKON_HOME=$HOME/.virtualenvs" >> /home/app/.bashrc &&\
-    mkdir -p /home/app/.virtualenvs &&\
-    echo "source /usr/share/virtualenvwrapper/virtualenvwrapper_lazy.sh" >> /home/app/.bashrc &&\
+    mkdir -p /home/app/venv &&\
     chown -R app:app /home/app &&\
     mkdir /var/log/app && chown app:app /var/log/app &&\
     sudo -u app bash -c "export GO111MODULE=on && /usr/local/go/bin/go get -d github.com/cheggaaa/pb/v3" &&\
@@ -27,9 +25,8 @@ RUN useradd -ms /bin/bash app &&\
 
 COPY --chown=app:app requirements.txt /home/app/
 
-RUN ["sudo", "-u", "app", "/bin/bash", "-c", "export VIRTUALENVWRAPPER_PYTHON=python3 &&\
-    . /usr/share/virtualenvwrapper/virtualenvwrapper.sh &&\
-    mkvirtualenv --python=/usr/bin/python3 main -r ~/requirements.txt"]
+RUN ["sudo", "-u", "app", "/bin/bash", "-c", "python3 -m venv ~/venv/main && \
+    ~/venv/main/bin/pip install -r ~/requirements.txt"]
 
 COPY --chown=app:app app.py run.py run.sh /home/app/
 COPY static /home/app/static
