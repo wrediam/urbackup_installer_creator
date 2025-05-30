@@ -124,9 +124,32 @@ def create_installer():
         # Create go.mod with required dependencies
         with open(workdir+"/go.mod", "a") as f:
             f.write("\nrequire (\n")
-            f.write("\tgithub.com/cheggaaa/pb/v3 v3.1.7\n")
-            f.write("\tgolang.org/x/crypto v0.38.0\n")
+            f.write("\tgithub.com/cheggaaa/pb/v3 v3.1.0\n")
+            f.write("\tgolang.org/x/crypto v0.0.0-20220214200702-86341886e292\n")
             f.write(")\n")
+            
+        # Create go.sum with exact versions to avoid conflicts
+        with open(workdir+"/go.sum", "w") as f:
+            f.write("github.com/VividCortex/ewma v1.1.1 h1:MnEK4VOv6n0RSY4vtRe3h11qjxL3+t0B8yOL8iMXdcM=\n")
+            f.write("github.com/VividCortex/ewma v1.1.1/go.mod h1:2Tkkvm3sRDVXaiyucHiACn4cqf7DpdyLvmxzcbUokwA=\n")
+            f.write("github.com/cheggaaa/pb/v3 v3.1.0 h1:3uZOKTjY+ORyqz0YmIzgmxV4cZVtQpLEEaIZK0GXJqo=\n")
+            f.write("github.com/cheggaaa/pb/v3 v3.1.0/go.mod h1:YjrevcBqadFDaGQKRdmZxTY42pXEqda48Ea3lt0K/BE=\n")
+            f.write("github.com/fatih/color v1.10.0 h1:s36xzo75JdqLaaWoiEHk767eHiwo0598uUxyfiPkDsg=\n")
+            f.write("github.com/fatih/color v1.10.0/go.mod h1:ELkj/draVOlAH/xkhN6mQ50Qd0MPOk5AAr3maGEBuJM=\n")
+            f.write("github.com/mattn/go-colorable v0.1.8 h1:c1ghPdyEDarC70ftn0y+A/Ee++9zz8ljHG1b13eJ0s8=\n")
+            f.write("github.com/mattn/go-colorable v0.1.8/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=\n")
+            f.write("github.com/mattn/go-isatty v0.0.12 h1:wuysRhFDzyxgEmMf5xjvJ2M9dZoWAXNNr5LSBS7uHXY=\n")
+            f.write("github.com/mattn/go-isatty v0.0.12/go.mod h1:cbi8OIDigv2wuxKPP5vlRcQ1OAZbq2CE4Kysco4FUpU=\n")
+            f.write("github.com/mattn/go-runewidth v0.0.12 h1:Y41i/hVW3Pgwr8gV+J23B9YEY0zxjptBuCWEaxmAOow=\n")
+            f.write("github.com/mattn/go-runewidth v0.0.12/go.mod h1:RAqKPSqVFrSLVXbA8x7dzmKdmGzieGRCM46jaSJTDAk=\n")
+            f.write("github.com/rivo/uniseg v0.1.0 h1:+2KBaVoUmb9XzDsrx/Ct0W/EYOSFf/nWTauy++DprtY=\n")
+            f.write("github.com/rivo/uniseg v0.1.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=\n")
+            f.write("golang.org/x/crypto v0.0.0-20220214200702-86341886e292 h1:f+lwQ+GtmgoY+A2YaQxlSOnDjXcQ7ZRLWOHbC6HtRqE=\n")
+            f.write("golang.org/x/crypto v0.0.0-20220214200702-86341886e292/go.mod h1:IxCIyHEi3zRg3s0A5j5BB6A9Jmi73HwBIUl50j+osU4=\n")
+            f.write("golang.org/x/sys v0.0.0-20200116001909-b77594299b42/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=\n")
+            f.write("golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=\n")
+            f.write("golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c h1:F1jZWGFhYfh0Ci55sIpILtKKK8p3i2/krTr0H1rg74I=\n")
+            f.write("golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=\n")
     except subprocess.CalledProcessError as e:
         app.logger.error("Error initializing Go module: " + e.output.decode())
         # Continue anyway, as this might not be fatal
