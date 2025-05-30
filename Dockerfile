@@ -5,7 +5,7 @@ FROM debian:stable
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -y update && \
-    apt-get -y --no-install-recommends install python3 python3-pip sudo git wget python3-setuptools && \
+    apt-get -y --no-install-recommends install python3 python3-pip sudo git wget python3-setuptools xz-utils && \
     wget -q -O /tmp/upx.tar.xz "https://github.com/upx/upx/releases/download/v4.0.2/upx-4.0.2-amd64_linux.tar.xz" && \
     tar -xf /tmp/upx.tar.xz -C /tmp && \
     cp /tmp/upx-*/upx /usr/local/bin/ && \
