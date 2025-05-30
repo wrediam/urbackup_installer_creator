@@ -35,12 +35,11 @@ RUN useradd -ms /bin/bash app &&\
 
 # Set up Go module and install Go packages
 RUN mkdir -p /home/app/gomod && \
-    cd /home/app/gomod && \
-    sudo -u app /usr/local/go/bin/go mod init urbackup_installer && \
-    sudo -u app /usr/local/go/bin/go install github.com/cheggaaa/pb/v3@latest && \
-    sudo -u app /usr/local/go/bin/go install golang.org/x/crypto/pbkdf2@latest && \
+    chown -R app:app /home/app && \
     echo 'export PATH=$PATH:/usr/local/go/bin:/home/app/go/bin' >> /home/app/.bashrc && \
-    chown -R app:app /home/app
+    sudo -u app bash -c 'cd /home/app/gomod && /usr/local/go/bin/go mod init urbackup_installer' && \
+    sudo -u app bash -c '/usr/local/go/bin/go install github.com/cheggaaa/pb/v3@latest' && \
+    sudo -u app bash -c '/usr/local/go/bin/go install golang.org/x/crypto/pbkdf2@latest'
     
 
 COPY --chown=app:app requirements.txt /home/app/
