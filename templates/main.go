@@ -47,8 +47,8 @@ func get_response(server_settings ServerSettings, action string, params url.Valu
 		return nil, err
 	}
 
-	// Set the correct Content-Type for form data
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	// Set Content-Type to JSON
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err = http.DefaultClient.Do(req)
 	if err != nil {
@@ -128,17 +128,27 @@ func login(server_settings ServerSettings, username string, sr *SaltResp, passwo
 	fmt.Println("Logging into server...")
 	fmt.Println("Session ID:", sr.Ses)
 
+	fmt.Println("Password length:", len(password), "characters")
+	fmt.Println("Salt:", sr.Salt)
+	fmt.Println("Rnd:", sr.Rnd)
+	
+	// Step 1: Initial MD5 hash of salt+password
 	password_md5_bin := md5.Sum([]byte(sr.Salt + password))
 	password_md5 := hex.EncodeToString(password_md5_bin[:])
+	fmt.Println("Step 1 - MD5(salt+password):", password_md5)
 
+	// Step 2: PBKDF2 if rounds > 0
 	if sr.Pbkdf2_rounds > 0 {
 		fmt.Println("Using PBKDF2 with", sr.Pbkdf2_rounds, "rounds")
 		password_md5 = hex.EncodeToString(pbkdf2.Key(password_md5_bin[:],
 			[]byte(sr.Salt), sr.Pbkdf2_rounds, 32, sha256.New))
+		fmt.Println("Step 2 - After PBKDF2:", password_md5)
 	}
 
+	// Step 3: Final MD5 hash with random value
 	password_md5_bin = md5.Sum([]byte(sr.Rnd + password_md5))
 	password_md5 = hex.EncodeToString(password_md5_bin[:])
+	fmt.Println("Step 3 - Final MD5(rnd+hash):", password_md5)
 
 	fmt.Println("Sending login request to server...")
 	json_str, err := get_json(server_settings, "login", url.Values{"username": {username},
@@ -146,7 +156,7 @@ func login(server_settings ServerSettings, username string, sr *SaltResp, passwo
 		"ses":      {sr.Ses},
 		"lang":     {"en"}})
 	
-	fmt.Println("Login parameters: username=", username, "&password=", password_md5, "&ses=", sr.Ses, "&lang=en")
+	fmt.Println("Login parameters: username=" + username + "&password=" + password_md5 + "&ses=" + sr.Ses + "&lang=en")
 
 	if err != nil {
 		fmt.Println("Error sending login request:", err)
