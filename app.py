@@ -114,15 +114,16 @@ def create_installer():
     elif sel_os == "win32":
         go_ldflags = ""
 
-    env = {"GOARCH": go_arch, "GOOS": go_os, "GOARM": go_arm, "PATH": os.getenv("PATH"), "HOME": os.getenv("HOME"), "GO111MODULE": "on", "GOFLAGS": "-insecure"}
+    # Use GOPATH mode instead of modules
+    env = {"GOARCH": go_arch, "GOOS": go_os, "GOARM": go_arm, "PATH": os.getenv("PATH"), "HOME": os.getenv("HOME"), "GO111MODULE": "off", "GOPATH": os.path.abspath(workdir)}
     
     try:
         # Create a simpler approach - directly copy the required Go packages
-        os.makedirs(workdir+"/vendor/github.com/cheggaaa/pb/v3", exist_ok=True)
-        os.makedirs(workdir+"/vendor/golang.org/x/crypto/pbkdf2", exist_ok=True)
+        os.makedirs(workdir+"/src/github.com/cheggaaa/pb/v3", exist_ok=True)
+        os.makedirs(workdir+"/src/golang.org/x/crypto/pbkdf2", exist_ok=True)
         
         # Create a minimal pb/v3 package
-        with open(workdir+"/vendor/github.com/cheggaaa/pb/v3/pb.go", "w") as f:
+        with open(workdir+"/src/github.com/cheggaaa/pb/v3/pb.go", "w") as f:
             f.write("// Package pb provides progress bar functionality\n")
             f.write("package pb\n\n")
             f.write("// New creates a new progress bar\n")
@@ -143,7 +144,7 @@ def create_installer():
             f.write("}\n")
         
         # Create a minimal pbkdf2 package
-        with open(workdir+"/vendor/golang.org/x/crypto/pbkdf2/pbkdf2.go", "w") as f:
+        with open(workdir+"/src/golang.org/x/crypto/pbkdf2/pbkdf2.go", "w") as f:
             f.write("// Package pbkdf2 implements the key derivation function PBKDF2\n")
             f.write("package pbkdf2\n\n")
             f.write("import (\n")
@@ -154,31 +155,28 @@ def create_installer():
             f.write("\treturn make([]byte, keyLen)\n")
             f.write("}\n")
         
-        # Create a minimal hash interface
-        os.makedirs(workdir+"/vendor/hash", exist_ok=True)
-        with open(workdir+"/vendor/hash/hash.go", "w") as f:
-            f.write("// Package hash provides interfaces for hash functions\n")
-            f.write("package hash\n\n")
-            f.write("// Hash is the common interface implemented by all hash functions\n")
-            f.write("type Hash interface {\n")
-            f.write("\tWrite(p []byte) (n int, err error)\n")
-            f.write("\tSum(b []byte) []byte\n")
-            f.write("\tReset()\n")
-            f.write("\tSize() int\n")
-            f.write("\tBlockSize() int\n")
-            f.write("}\n\n")
-            f.write("// New returns a new hash.Hash calculating the given hash function\n")
-            f.write("type New func() Hash\n")
+        # Move main.go to the correct location for GOPATH mode
+        os.makedirs(workdir+"/src/urbackup-installer", exist_ok=True)
+        with open(workdir+"/main.go", "r") as src_file:
+            main_content = src_file.read()
+        
+        with open(workdir+"/src/urbackup-installer/main.go", "w") as dst_file:
+            dst_file.write(main_content)
+        
+        # Update the output path
+        out_path = os.path.join(workdir, "bin", out_name)
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
     except Exception as e:
         app.logger.error("Error setting up vendor packages: " + str(e))
         # Continue anyway, as this might not be fatal
 
     try:
         app.logger.info("run-start")
-        # Use standard build command
-        build_cmd = ["go", "build", "-o", out_name]
+        # Use GOPATH-style build command
+        build_cmd = ["go", "build", "-o", os.path.join(workdir, "bin", out_name)]
         if go_ldflags:
             build_cmd.extend(go_ldflags.split())
+        build_cmd.append("urbackup-installer")
         app.logger.info("Running command: " + " ".join(build_cmd))
         output = subprocess.check_output(build_cmd, stderr=subprocess.STDOUT, cwd=workdir, env=env)
     except subprocess.CalledProcessError as e:
@@ -187,14 +185,15 @@ def create_installer():
         app.logger.error('error>' + e.output.decode()+  '<')
         raise
 	
+    final_path = os.path.join(workdir, "bin", out_name)
     try:
-        output = subprocess.check_output(["upx", os.path.join(workdir, out_name)], stderr=subprocess.STDOUT)
+        output = subprocess.check_output(["upx", final_path], stderr=subprocess.STDOUT)
     except FileNotFoundError:
         # Try with upx-ucl if upx is not found
-        output = subprocess.check_output(["upx-ucl", os.path.join(workdir, out_name)], stderr=subprocess.STDOUT)
+        output = subprocess.check_output(["upx-ucl", final_path], stderr=subprocess.STDOUT)
 
     outf = BytesIO()
-    with open(os.path.join(workdir, out_name), "rb") as f:
+    with open(final_path, "rb") as f:
         outf.write(f.read())
 
     outf.seek(0)
