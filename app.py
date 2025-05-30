@@ -270,10 +270,14 @@ def create_installer():
 	
     final_path = os.path.join(workdir, "bin", out_name)
     try:
-        output = subprocess.check_output(["upx", final_path], stderr=subprocess.STDOUT)
-    except FileNotFoundError:
-        # Try with upx-ucl if upx is not found
-        output = subprocess.check_output(["upx-ucl", final_path], stderr=subprocess.STDOUT)
+        try:
+            output = subprocess.check_output(["upx", final_path], stderr=subprocess.STDOUT)
+        except FileNotFoundError:
+            # Try with upx-ucl if upx is not found
+            output = subprocess.check_output(["upx-ucl", final_path], stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        app.logger.warning(f"UPX compression failed: {e}. Continuing with uncompressed executable.")
+        # Continue without compression if UPX fails
 
     outf = BytesIO()
     with open(final_path, "rb") as f:
