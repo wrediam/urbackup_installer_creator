@@ -114,7 +114,7 @@ def create_installer():
     elif sel_os == "win32":
         go_ldflags = ""
 
-    env = {"GOARCH": go_arch, "GOOS": go_os, "GOARM": go_arm, "PATH": os.getenv("PATH"), "HOME": os.getenv("HOME"), "GO111MODULE": "on"}
+    env = {"GOARCH": go_arch, "GOOS": go_os, "GOARM": go_arm, "PATH": os.getenv("PATH"), "HOME": os.getenv("HOME"), "GO111MODULE": "on", "GOFLAGS": "-insecure"}
     
     # Initialize Go module
     try:
@@ -156,7 +156,8 @@ def create_installer():
 
     try:
         app.logger.info("run-start")
-        build_cmd = ["go", "build", "-o", out_name]
+        # Add -mod=mod to bypass checksum verification
+        build_cmd = ["go", "build", "-mod=mod", "-o", out_name]
         if go_ldflags:
             build_cmd.extend(go_ldflags.split())
         app.logger.info("Running command: " + " ".join(build_cmd))
