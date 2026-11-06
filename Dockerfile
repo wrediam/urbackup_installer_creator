@@ -1,6 +1,6 @@
 #SPDX-License-Identifier: AGPL-3.0-or-later
 
-FROM debian:stable
+FROM debian:trixie
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -11,17 +11,15 @@ RUN apt-get -y update && \
     cp /tmp/upx-*/upx /usr/local/bin/ && \
     chmod +x /usr/local/bin/upx && \
     rm -rf /tmp/upx* && \
-    wget "https://dl.google.com/go/go1.13.8.linux-amd64.tar.gz" -O "/tmp/go-linux-amd64.tar.gz" && \
+    wget "https://dl.google.com/go/go1.26.10.linux-amd64.tar.gz" -O "/tmp/go-linux-amd64.tar.gz" && \
     tar -C /usr/local -xf "/tmp/go-linux-amd64.tar.gz" && \
     rm "/tmp/go-linux-amd64.tar.gz"
 
 RUN useradd -ms /bin/bash app &&\
     mkdir -p /home/app/venv &&\
     chown -R app:app /home/app &&\
-    mkdir /var/log/app && chown app:app /var/log/app &&\
-    sudo -u app bash -c "export GO111MODULE=on && /usr/local/go/bin/go get -d github.com/cheggaaa/pb/v3" &&\
-    sudo -u app bash -c "export GO111MODULE=on && /usr/local/go/bin/go get -d golang.org/x/crypto/pbkdf2"
-    
+    mkdir /var/log/app && chown app:app /var/log/app
+
 
 COPY --chown=app:app requirements.txt /home/app/
 
